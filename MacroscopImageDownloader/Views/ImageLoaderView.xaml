@@ -1,0 +1,49 @@
+﻿<UserControl x:Class="MacroscopImageDownloader.Views.ImageLoaderView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:MacroscopImageDownloader.Views"
+             xmlns:vm="clr-namespace:MacroscopImageDownloader.ViewModels"
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="800">
+    <UserControl.DataContext>
+        <vm:ImageDownloader/>
+    </UserControl.DataContext>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <TextBlock Grid.Row="0">
+            <TextBlock.Style>
+                <Style TargetType="TextBlock">
+                    <Setter Property="HorizontalAlignment" Value="Center"/>
+                    <Setter Property="VerticalAlignment" Value="Center"/>
+                    <Setter Property="Text" Value="{Binding Download.Status}"/>
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding Download}" Value="{x:Null}">
+                            <Setter Property="Text" Value="Download Not Started"/>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </TextBlock.Style>
+        </TextBlock>
+        <Image Grid.Row="0"
+               x:Name="image"
+               Source="{Binding Download.Image, IsAsync=True}"/>
+        <TextBox Grid.Row="1"
+                 Text="{Binding Url, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+        <DockPanel Grid.Row="2" LastChildFill="True">
+            <Button Content="Start" 
+                    Command="{Binding StartDownloadCommand}" 
+                    CommandParameter="{Binding ElementName=image, Path=RenderSize}"
+                    DockPanel.Dock="Left"/>
+            <Button Content="Stop" 
+                    Command="{Binding StopDownloadCommand}"
+                    DockPanel.Dock="Left"/>
+            <ProgressBar Value="{Binding Download.Progress, Mode=OneWay}"/>
+        </DockPanel>
+    </Grid>
+</UserControl>
