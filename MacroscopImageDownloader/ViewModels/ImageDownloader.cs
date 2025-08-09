@@ -69,42 +69,35 @@ namespace MacroscopImageDownloader.ViewModels
             {
                 if (_Download != value)
                 {
-                    if (_Download != null)
-                    {
-                        _Download.PropertyChanged -= DownLoadPropertyChanged;
-                    }
                     _Download = value;
-                    if (_Download != null)
-                    {
-                        _Download.PropertyChanged += DownLoadPropertyChanged;
-                    }
                     OnPropertyChanged(nameof(Download));
                 }
             }
         }
 
-        private void DownLoadPropertyChanged(object? sender, PropertyChangedEventArgs e)
+        private Progress? _progress;
+
+        public Progress Progress
         {
-            if (sender is Download download &&
-                e.PropertyName == nameof(Download.Progress))
+            get
             {
-                OnProgressChanged(download.Progress);
+                if (_progress == null)
+                {
+                    _progress = new Progress() { Percent = 0, Status = DownloadStatus.NotStarted.ToString() };
+                }
+                return _progress;
             }
-        }
-
-        public event EventHandler<ProgressChangedEventArgs>? ProgressChanged;
-
-        private void OnProgressChanged(int progress)
-        {
-            ProgressChanged?.Invoke(this, new ProgressChangedEventArgs(progress, Download?.Status ?? Download.DownloadStatus.NotStarted));
         }
 
         private void StartDownload(object? obj)
         {
             if (Url.IsImageUrl())
             {
-                Size desiredSize = obj is Size size ? size : Size.Empty;
-                Download = new Download(new Uri(Url), desiredSize);
+                Download = new Download(new Uri(Url), new Progress<ProgressInfo>(info =>
+                {
+                    Progress.Percent = info.ProgressPercent;
+                    Progress.Status = info.Status;
+                }));
                 Download.Start();
             }
         }
@@ -122,7 +115,7 @@ namespace MacroscopImageDownloader.ViewModels
         private void StopDownload(object? obj)
         {
             Download = null;
-            OnProgressChanged(0);
+            
         }
     }
 }

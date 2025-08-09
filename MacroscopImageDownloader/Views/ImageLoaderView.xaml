@@ -21,12 +21,7 @@
                 <Style TargetType="TextBlock">
                     <Setter Property="HorizontalAlignment" Value="Center"/>
                     <Setter Property="VerticalAlignment" Value="Center"/>
-                    <Setter Property="Text" Value="{Binding Download.Status}"/>
-                    <Style.Triggers>
-                        <DataTrigger Binding="{Binding Download}" Value="{x:Null}">
-                            <Setter Property="Text" Value="Download Not Started"/>
-                        </DataTrigger>
-                    </Style.Triggers>
+                    <Setter Property="Text" Value="{Binding Progress.Status}"/>
                 </Style>
             </TextBlock.Style>
         </TextBlock>
@@ -43,7 +38,7 @@
             <Button Content="Stop" 
                     Command="{Binding StopDownloadCommand}"
                     DockPanel.Dock="Left"/>
-            <ProgressBar Value="{Binding Download.Progress, Mode=OneWay}"/>
+            <ProgressBar Value="{Binding Progress.Percent, Mode=OneWay}"/>
         </DockPanel>
     </Grid>
 </UserControl>

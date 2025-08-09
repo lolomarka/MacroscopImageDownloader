@@ -1,5 +1,4 @@
 ﻿using System.ComponentModel;
-using System.Drawing;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 
@@ -18,55 +17,14 @@ namespace MacroscopImageDownloader.Models
 
         #endregion
 
-        public enum DownloadStatus
+        private readonly Uri _uri;
+        private readonly IProgress<ProgressInfo>? _progress;
+
+        public Download(Uri uri, IProgress<ProgressInfo>? progress)
         {
-            NotStarted = 0,
-            Active = 1,
-            Failed = 2,
-            Completed = 4
-        }
-
-        private readonly Uri _Uri;
-        private readonly Size _DesizeredSize;
-
-        public Download(Uri uri, Size desiredSize)
-        {
-            _DesizeredSize = desiredSize;
-            _Uri = uri ?? throw new ArgumentNullException(nameof(uri));
-            _Status = DownloadStatus.NotStarted;
-        }
-
-        private DownloadStatus _Status;
-
-        public DownloadStatus Status
-        {
-            get
-            {
-                return _Status;
-            }
-            private set
-            {
-                if (_Status != value)
-                {
-                    _Status = value;
-                    OnPropertyChanged(nameof(Status));
-                }
-            }
-        }
-
-        private int _Progress;
-
-        public int Progress
-        {
-            get { return _Progress; }
-            private set
-            {
-                if (_Progress != value)
-                {
-                    _Progress = value;
-                    OnPropertyChanged(nameof(Progress));
-                }
-            }
+            _uri = uri ?? throw new ArgumentNullException(nameof(uri));
+            _progress = progress;
+            ReportProgress(0, DownloadStatus.NotStarted);
         }
 
         private BitmapImage? _Image;
@@ -89,6 +47,11 @@ namespace MacroscopImageDownloader.Models
 
         private BitmapImage? _ActiveLoadingImage;
 
+        private void ReportProgress(int value, DownloadStatus status)
+        {
+            _progress?.Report(new ProgressInfo(value, status));
+        }
+
         public void Start()
         {
             if (_ActiveLoadingImage != null)
@@ -96,21 +59,14 @@ namespace MacroscopImageDownloader.Models
             BitmapImage image = new BitmapImage();
             image.BeginInit();
 
-            if (_DesizeredSize != Size.Empty)
-            {
-                image.DecodePixelWidth = _DesizeredSize.Width;
-                image.DecodePixelHeight = _DesizeredSize.Height;
-            }
-
             SubscribeImageEvents(image);
-            image.UriSource = _Uri;
+            image.UriSource = _uri;
             image.EndInit();
-            Status = DownloadStatus.Active;
+            ReportProgress(0, DownloadStatus.Active);
             if (!image.IsDownloading)
             {
-                Progress = 100;
+                ReportProgress(100, DownloadStatus.Completed);
                 Image = image;
-                Status = DownloadStatus.Completed;
             }
             _ActiveLoadingImage = image;
         }
@@ -136,14 +92,13 @@ namespace MacroscopImageDownloader.Models
             if (sender is BitmapImage image)
             {
                 UnsubscribeImageEvents(image);
-                Status = DownloadStatus.Failed;
                 _ActiveLoadingImage = null;
             }
         }
 
         private void Image_DownloadProgress(object? sender, DownloadProgressEventArgs e)
         {
-            Progress = e.Progress;
+            ReportProgress(e.Progress, DownloadStatus.Active);
         }
 
         private void Image_DownloadCompleted(object? sender, EventArgs e)
@@ -151,7 +106,7 @@ namespace MacroscopImageDownloader.Models
             if (sender is BitmapImage image)
             {
                 UnsubscribeImageEvents(image);
-                Status = DownloadStatus.Completed;
+                ReportProgress(100, DownloadStatus.Completed);
                 _ActiveLoadingImage = null;
                 Image = image;
             }

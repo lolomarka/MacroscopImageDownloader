@@ -1,5 +1,6 @@
 ﻿using MacroscopImageDownloader.Models;
 using MacroscopImageDownloader.ViewModels;
+using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -23,22 +24,18 @@ namespace MacroscopImageDownloader.Views
                                                 .OfType<ImageDownloader>().ToArray();
             foreach (var loader in _ImageLoaders)
             {
-                loader.ProgressChanged += Loader_ProgressChanged;
+                loader.Progress.PropertyChanged += Loader_ProgressChanged;
             }
         }
 
-        private void Loader_ProgressChanged(object? sender, System.ComponentModel.ProgressChangedEventArgs e)
+        private void Loader_ProgressChanged(object? sender, PropertyChangedEventArgs e)
         {
             InvalidateProgress();
         }
 
         private void InvalidateProgress()
         {
-            var displayableLoaders = _ImageLoaders.Where(loader => loader.Download != null
-                                                     && (loader.Download.Status == Download.DownloadStatus.Active
-                                                     || loader.Download.Status == Download.DownloadStatus.Completed));
-
-            Progress = displayableLoaders.Any() ? (int)displayableLoaders.Average(loader => loader.Download.Progress) : 0;
+            Progress = _ImageLoaders.Any() ? (int)_ImageLoaders.Average(loader => loader.Progress.Percent) : 0;
         }
 
         private static readonly DependencyPropertyKey ProgressPropertyKey =
