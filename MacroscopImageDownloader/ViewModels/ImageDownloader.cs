@@ -2,11 +2,17 @@
 using System.ComponentModel;
 using System.Drawing;
 using System.Windows.Input;
+using System.Windows.Media.Imaging;
 
 namespace MacroscopImageDownloader.ViewModels
 {
-    public class ImageDownloader : INotifyPropertyChanged
+    public class ImageDownloader : INotifyPropertyChanged, IDisposable
     {
+        ~ImageDownloader()
+        {
+            DisposeImpl();
+        }
+
         #region INotifyPropertyChanged Implementation
 
         public event PropertyChangedEventHandler? PropertyChanged;
@@ -57,9 +63,9 @@ namespace MacroscopImageDownloader.ViewModels
             }
         }
 
-        private Download? _Download;
+        private IDownload? _Download;
 
-        public Download? Download
+        public IDownload? Download
         {
             get
             {
@@ -89,16 +95,32 @@ namespace MacroscopImageDownloader.ViewModels
             }
         }
 
+        private CancellationTokenSource? _cancellationTokenSource;
+
+        private void Cancel()
+        {
+            _cancellationTokenSource?.Cancel();
+            _cancellationTokenSource?.Dispose();
+            _cancellationTokenSource = null;
+        }
+
+        private CancellationToken GetNewCancellationToken()
+        {
+            Cancel();
+            _cancellationTokenSource = new CancellationTokenSource();
+            return _cancellationTokenSource.Token;
+        }
+
         private void StartDownload(object? obj)
         {
             if (Url.IsImageUrl())
             {
-                Download = new Download(new Uri(Url), new Progress<ProgressInfo>(info =>
+                Download = new InteropDownload();
+                Download.StartAsync(new Uri(Url), new Progress<ProgressInfo>(info =>
                 {
                     Progress.Percent = info.ProgressPercent;
                     Progress.Status = info.Status;
-                }));
-                Download.Start();
+                }), GetNewCancellationToken());
             }
         }
 
@@ -114,8 +136,34 @@ namespace MacroscopImageDownloader.ViewModels
 
         private void StopDownload(object? obj)
         {
+            Cancel();
+            DisposeDownload();
+        }
+
+        private void DisposeDownload()
+        {
+            var download = Download;
             Download = null;
-            
+            if (download is IDisposable disposableDownload)
+                disposableDownload.Dispose();
+        }
+
+        private bool disposed;
+
+        private void DisposeImpl()
+        {
+            if (!disposed)
+            {
+                DisposeDownload();
+                disposed = true;
+            }
+        }
+
+
+        public void Dispose()
+        {
+            DisposeImpl();
+            GC.SuppressFinalize(this);
         }
     }
 }
