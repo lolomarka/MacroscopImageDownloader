@@ -1,5 +1,6 @@
 ﻿using MacroscopImageDownloader.Models;
 using MacroscopImageDownloader.ViewModels;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
@@ -9,23 +10,25 @@ namespace MacroscopImageDownloader.Views
 {
     public partial class ThreeImageLoader : UserControl
     {
-        private IEnumerable<ImageDownloader> _ImageLoaders;
+        public const int Rows = 5;
+        public const int Columns = 6;
 
         public ThreeImageLoader()
         {
             InitializeComponent();
-            InitializeChildrenWatching();
+            InitializeChildrenWatching(Rows * Columns);
         }
 
-        private void InitializeChildrenWatching()
+        private void InitializeChildrenWatching(int count)
         {
-            _ImageLoaders = LoadersGrid.Children.OfType<ImageLoaderView>()
-                                                .Select(view => view.DataContext)
-                                                .OfType<ImageDownloader>().ToArray();
-            foreach (var loader in _ImageLoaders)
+            var loaders = new ObservableCollection<ImageDownloader>();
+            for (int i = 0; i < count; i++)
             {
+                var loader = new ImageDownloader();
                 loader.Progress.PropertyChanged += Loader_ProgressChanged;
+                loaders.Add(loader);
             }
+            ImageLoaders = loaders;
         }
 
         private void Loader_ProgressChanged(object? sender, PropertyChangedEventArgs e)
@@ -35,13 +38,24 @@ namespace MacroscopImageDownloader.Views
 
         private void InvalidateProgress()
         {
-            Progress = _ImageLoaders.Any() ? (int)_ImageLoaders.Average(loader => loader.Progress.Percent) : 0;
+            Progress = ImageLoaders.Any() ? (int)ImageLoaders.Average(loader => loader.Progress.Percent) : 0;
         }
 
         private static readonly DependencyPropertyKey ProgressPropertyKey =
             DependencyProperty.RegisterReadOnly(nameof(Progress), typeof(int), typeof(ThreeImageLoader), new PropertyMetadata(0));
 
         public static readonly DependencyProperty ProgressProperty = ProgressPropertyKey.DependencyProperty;
+
+        public IEnumerable<ImageDownloader> ImageLoaders
+        {
+            get { return (IEnumerable<ImageDownloader>)GetValue(ImageLoadersProperty); }
+            private set { SetValue(ImageLoadersPropertyKey, value); }
+        }
+
+        private static readonly DependencyPropertyKey ImageLoadersPropertyKey =
+            DependencyProperty.RegisterReadOnly(nameof(ImageLoaders), typeof(IEnumerable<ImageDownloader>), typeof(ThreeImageLoader), new PropertyMetadata());
+
+        public static readonly DependencyProperty ImageLoadersProperty = ImageLoadersPropertyKey.DependencyProperty;
 
         public int Progress
         {
@@ -63,7 +77,7 @@ namespace MacroscopImageDownloader.Views
 
         private void DownloadAllExecute(object? obj)
         {
-            foreach (var item in _ImageLoaders.Where(loader => loader.StartDownloadCommand.CanExecute(obj)))
+            foreach (var item in ImageLoaders.Where(loader => loader.StartDownloadCommand.CanExecute(obj)))
             {
                 item.StartDownloadCommand.Execute(obj);
             }
@@ -71,7 +85,7 @@ namespace MacroscopImageDownloader.Views
 
         private bool DownloadAllCanExecute(object? arg)
         {
-            return _ImageLoaders.Any(loader => loader.StartDownloadCommand.CanExecute(arg));
+            return ImageLoaders.Any(loader => loader.StartDownloadCommand.CanExecute(arg));
         }
     }
 }

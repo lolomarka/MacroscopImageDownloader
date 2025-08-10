@@ -5,7 +5,7 @@
         NotStarted = 0,
         Active = 1,
         Failed = 2,
-        Canceled = 3,
-        Completed = 4
+        Completed = 4,
+        Cancelled = 6
     }
 }

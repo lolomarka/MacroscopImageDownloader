@@ -74,6 +74,7 @@ namespace MacroscopImageDownloader.Models
             Stream? stream = null;
             try
             {
+                progress?.Report(new ProgressInfo(0, DownloadStatus.Active));
                 using (var response = await Http.Client.GetAsync(uri, HttpCompletionOption.ResponseHeadersRead, token))
                 {
                     response.EnsureSuccessStatusCode();
@@ -115,10 +116,16 @@ namespace MacroscopImageDownloader.Models
                 }
                 if (token.IsCancellationRequested)
                 {
-                    progress?.Report(new ProgressInfo(0, DownloadStatus.Canceled));
+                    progress?.Report(new ProgressInfo(0, DownloadStatus.Cancelled));
                     return null;
                 }
                 DecodeWithWIC(stream, out byte[] pixels, out int pixelWidth, out int pixelHeight, out PixelFormat pixelFormat, out int stride, out int byteCount);
+
+                if (token.IsCancellationRequested)
+                {
+                    progress?.Report(new ProgressInfo(0, DownloadStatus.Cancelled));
+                    return null;
+                }
 
                 _MemoryMappedFile?.Dispose();
                 _MemoryMappedFile = MemoryMappedFile.CreateNew(null, byteCount);
@@ -136,6 +143,7 @@ namespace MacroscopImageDownloader.Models
                     stride,
                     0);
                 interopBitmap.Freeze();
+                progress?.Report(new ProgressInfo(100, DownloadStatus.Completed));
                 return interopBitmap;
             }
             finally

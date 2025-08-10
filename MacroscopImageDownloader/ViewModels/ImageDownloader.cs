@@ -1,8 +1,6 @@
 ﻿using MacroscopImageDownloader.Models;
 using System.ComponentModel;
-using System.Drawing;
 using System.Windows.Input;
-using System.Windows.Media.Imaging;
 
 namespace MacroscopImageDownloader.ViewModels
 {
@@ -89,7 +87,7 @@ namespace MacroscopImageDownloader.ViewModels
             {
                 if (_progress == null)
                 {
-                    _progress = new Progress() { Percent = 0, Status = DownloadStatus.NotStarted.ToString() };
+                    _progress = new Progress() { Percent = 0, Status = DownloadStatus.NotStarted };
                 }
                 return _progress;
             }
@@ -126,12 +124,12 @@ namespace MacroscopImageDownloader.ViewModels
 
         private bool CanStartDownload(object? arg)
         {
-            return Download == null && (Url?.IsImageUrl() ?? false);
+            return (Download == null && (Url?.IsImageUrl() ?? false)) || Progress.Status.HasFlag(DownloadStatus.Completed);
         }
 
         private bool CanStopDownload(object? arg)
         {
-            return Download != null;
+            return Download != null && (Progress?.Status.HasFlag(DownloadStatus.Active) ?? false);
         }
 
         private void StopDownload(object? obj)

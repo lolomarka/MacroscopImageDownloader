@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using MacroscopImageDownloader.Models;
 
 namespace MacroscopImageDownloader.ViewModels
 {
@@ -28,9 +29,9 @@ namespace MacroscopImageDownloader.ViewModels
             }
         }
 
-        private string? _status;
+        private DownloadStatus _status;
 
-        public string? Status
+        public DownloadStatus Status
         {
             get => _status;
             set
