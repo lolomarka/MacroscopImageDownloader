@@ -75,6 +75,7 @@ namespace MacroscopImageDownloader.ViewModels
                 {
                     _Download = value;
                     OnPropertyChanged(nameof(Download));
+                    CommandManager.InvalidateRequerySuggested();
                 }
             }
         }
@@ -113,11 +114,13 @@ namespace MacroscopImageDownloader.ViewModels
         {
             if (Url.IsImageUrl())
             {
+                DisposeDownload();
                 Download = new InteropDownload();
                 Download.StartAsync(new Uri(Url), new Progress<ProgressInfo>(info =>
                 {
                     Progress.Percent = info.ProgressPercent;
                     Progress.Status = info.Status;
+                    CommandManager.InvalidateRequerySuggested();
                 }), GetNewCancellationToken());
             }
         }
