@@ -10,8 +10,8 @@ namespace MacroscopImageDownloader.Views
 {
     public partial class ThreeImageLoader : UserControl
     {
-        public const int Rows = 6;
-        public const int Columns = 5;
+        public const int Rows = 1;
+        public const int Columns = 3;
 
         public ThreeImageLoader()
         {
@@ -38,7 +38,8 @@ namespace MacroscopImageDownloader.Views
 
         private void InvalidateProgress()
         {
-            Progress = ImageLoaders.Any() ? (int)ImageLoaders.Average(loader => loader.Progress.Percent) : 0;
+            var loaders = ImageLoaders.Where(loader => (loader.Progress.Status & DownloadStatus.NotStarted & DownloadStatus.Cancelled) == 0);
+            Progress = loaders.Any() ? (int)loaders.Average(loader => loader.Progress.Percent) : 0;
         }
 
         private static readonly DependencyPropertyKey ProgressPropertyKey =
@@ -86,6 +87,15 @@ namespace MacroscopImageDownloader.Views
         private bool DownloadAllCanExecute(object? arg)
         {
             return ImageLoaders.Any(loader => loader.StartDownloadCommand.CanExecute(arg));
+        }
+
+        private void FillAllClick(object sender, RoutedEventArgs e)
+        {
+            // only for test purposes
+            foreach (var loader in ImageLoaders)
+            {
+                loader.Url = FillAllTextBox.Text;
+            }
         }
     }
 }

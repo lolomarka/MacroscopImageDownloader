@@ -8,7 +8,7 @@ namespace MacroscopImageDownloader.Models
 {
     internal class BitmapDownload : IDownload
     {
-        private const int BufferSize = (1 << 10) * 64;
+        private const int MaxBufferSize = (1 << 10) * 64;
         private const double MaxWaitSeconds = 3d;
 
         private async Task<BitmapSource> DownloadAsync(Uri uri, IProgress<ProgressInfo>? progress, CancellationToken cancellationToken)
@@ -50,7 +50,8 @@ namespace MacroscopImageDownloader.Models
                 if (response.Content.Headers.ContentLength.HasValue)
                 {
                     long contentLength = response.Content.Headers.ContentLength.Value;
-                    await InBuffer(async buffer => await CopyStream(buffer, await response.Content.ReadAsStreamAsync(), resultStream, contentLength, token, progress), BufferSize);
+                    int bufferLength = (int)Math.Min((long)MaxBufferSize, contentLength / 100);
+                    await InBuffer(async buffer => await CopyStream(buffer, bufferLength, await response.Content.ReadAsStreamAsync(), resultStream, contentLength, token, progress), bufferLength);
                 }
             }
 
@@ -59,18 +60,19 @@ namespace MacroscopImageDownloader.Models
         }
 
         private async Task CopyStream(byte[] bufferArray,
-                                Stream inputStream,
-                                Stream outputStream,
-                                long length,
-                                CancellationToken token,
-                                IProgress<ProgressInfo>? progress,
-                                double progressMultiplier = 0.9d)
+                                      int bufferLength,
+                                      Stream inputStream,
+                                      Stream outputStream,
+                                      long length,
+                                      CancellationToken token,
+                                      IProgress<ProgressInfo>? progress,
+                                      double progressMultiplier = 0.9d)
         {
             int read = 0;
             for (long i = 0; i < length; i += read)
             {
                 token.ThrowIfCancellationRequested();
-                read = await inputStream.ReadAsync(bufferArray, 0, BufferSize);
+                read = await inputStream.ReadAsync(bufferArray, 0, bufferLength);
                 await outputStream.WriteAsync(bufferArray, 0, read);
                 progress?.Report(new ProgressInfo((int)(i * 100 / length * progressMultiplier), DownloadStatus.Active));
             }
@@ -109,13 +111,18 @@ namespace MacroscopImageDownloader.Models
 
         public void Start(Uri uri, IProgress<ProgressInfo>? progress, CancellationToken cancellationToken)
         {
-            DownloadAsync(uri, progress, CancellationToken.None)
+            DownloadAsync(uri, progress, cancellationToken)
                 .ContinueWith(t =>
                 {
-                    if (t.Exception == null && t.IsCompleted)
+                    if (t.Exception == null && t.Status == TaskStatus.RanToCompletion)
                     {
                         Image = t.Result;
                         progress?.Report(new ProgressInfo(100, DownloadStatus.Completed));
+                    }
+                    else if (t.Status == TaskStatus.Canceled || (t.Exception is AggregateException aggregate
+                          && aggregate.InnerExceptions.Any(ex => ex is OperationCanceledException)))
+                    {
+                        progress?.Report(new ProgressInfo(0, DownloadStatus.Cancelled));
                     }
                     else
                     {

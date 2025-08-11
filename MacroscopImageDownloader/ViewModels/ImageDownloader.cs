@@ -127,12 +127,12 @@ namespace MacroscopImageDownloader.ViewModels
 
         private bool CanStartDownload(object? arg)
         {
-            return (Download == null && (Url?.IsImageUrl() ?? false)) || (Progress.Status & DownloadStatus.Active) == 0;
+            return ((Download == null && (Url?.IsImageUrl() ?? false)) && (Progress.Status & DownloadStatus.Active) == 0) || Download?.Image != null;
         }
 
         private bool CanStopDownload(object? arg)
         {
-            return Download != null && (Progress?.Status.HasFlag(DownloadStatus.Active) ?? false);
+            return Download != null && (Progress?.Status & DownloadStatus.Active) > 0;
         }
 
         private void StopDownload(object? obj)

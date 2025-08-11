@@ -19,6 +19,12 @@
                     <Setter Property="HorizontalAlignment" Value="Center"/>
                     <Setter Property="VerticalAlignment" Value="Center"/>
                     <Setter Property="Text" Value="{Binding Progress.Status}"/>
+                    <Setter Property="Visibility" Value="Collapsed"/>
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding Download.Image}" Value="{x:Null}">
+                            <Setter Property="Visibility" Value="Visible"/>
+                        </DataTrigger>
+                    </Style.Triggers>
                 </Style>
             </TextBlock.Style>
         </TextBlock>

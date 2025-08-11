@@ -2,10 +2,10 @@
 {
     public enum DownloadStatus
     {
-        NotStarted = 0,
-        Active = 1,
-        Failed = 2,
-        Completed = 4,
-        Cancelled = 6
+        NotStarted = 1,
+        Active = 2,
+        Failed = 4,
+        Completed = 8,
+        Cancelled = 12
     }
 }
