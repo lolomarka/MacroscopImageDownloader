@@ -10,8 +10,8 @@ namespace MacroscopImageDownloader.Views
 {
     public partial class ThreeImageLoader : UserControl
     {
-        public const int Rows = 5;
-        public const int Columns = 6;
+        public const int Rows = 6;
+        public const int Columns = 5;
 
         public ThreeImageLoader()
         {

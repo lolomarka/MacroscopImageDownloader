@@ -24,7 +24,7 @@
         </TextBlock>
         <Image Grid.Row="0"
                x:Name="image"
-               Source="{Binding Download.Image, IsAsync=True}"/>
+               Source="{Binding Download.Image}"/>
         <TextBox Grid.Row="1"
                  Text="{Binding Url, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
         <DockPanel Grid.Row="2" LastChildFill="True">

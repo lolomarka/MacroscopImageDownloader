@@ -8,8 +8,4 @@
     <UseWPF>true</UseWPF>
   </PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="WIC.DotNet" Version="2.0.1" />
-  </ItemGroup>
-
 </Project>

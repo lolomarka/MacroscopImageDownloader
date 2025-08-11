@@ -115,8 +115,8 @@ namespace MacroscopImageDownloader.ViewModels
             if (Url.IsImageUrl())
             {
                 DisposeDownload();
-                Download = new InteropDownload();
-                Download.StartAsync(new Uri(Url), new Progress<ProgressInfo>(info =>
+                Download = new BitmapDownload();
+                Download.Start(new Uri(Url), new Progress<ProgressInfo>(info =>
                 {
                     Progress.Percent = info.ProgressPercent;
                     Progress.Status = info.Status;
@@ -127,7 +127,7 @@ namespace MacroscopImageDownloader.ViewModels
 
         private bool CanStartDownload(object? arg)
         {
-            return (Download == null && (Url?.IsImageUrl() ?? false)) || Progress.Status.HasFlag(DownloadStatus.Completed);
+            return (Download == null && (Url?.IsImageUrl() ?? false)) || (Progress.Status & DownloadStatus.Active) == 0;
         }
 
         private bool CanStopDownload(object? arg)

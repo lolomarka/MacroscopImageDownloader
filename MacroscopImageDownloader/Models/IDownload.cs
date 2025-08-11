@@ -5,8 +5,8 @@ namespace MacroscopImageDownloader.Models
 {
     public interface IDownload : INotifyPropertyChanged
     {
-        BitmapSource Image { get; }
+        BitmapSource? Image { get; }
 
-        Task StartAsync(Uri uri, IProgress<ProgressInfo>? progress, CancellationToken cancellationToken);
+        void Start(Uri uri, IProgress<ProgressInfo>? progress, CancellationToken cancellationToken);
     }
 }
