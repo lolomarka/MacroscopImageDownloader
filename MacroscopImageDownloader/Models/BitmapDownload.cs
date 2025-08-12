@@ -19,7 +19,7 @@ namespace MacroscopImageDownloader.Models
             }
         }
 
-        private Task<BitmapSource> Decode(Stream loadedStream, IProgress<ProgressInfo>? progress, CancellationToken cancellationToken)
+        protected virtual Task<BitmapSource> Decode(Stream loadedStream, IProgress<ProgressInfo>? progress, CancellationToken cancellationToken)
         {
             return Task.Run(() =>
             {

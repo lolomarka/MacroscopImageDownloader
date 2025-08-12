@@ -8,15 +8,14 @@ using System.Windows.Input;
 
 namespace MacroscopImageDownloader.Views
 {
-    public partial class ThreeImageLoader : UserControl
+    public partial class MultiImageLoader : UserControl
     {
-        public const int Rows = 1;
-        public const int Columns = 3;
-
-        public ThreeImageLoader()
+        public MultiImageLoader()
         {
             InitializeComponent();
-            InitializeChildrenWatching(Rows * Columns);
+#if TEST
+            TestPanel.Visibility = Visibility.Visible;
+#endif
         }
 
         private void InitializeChildrenWatching(int count)
@@ -43,7 +42,7 @@ namespace MacroscopImageDownloader.Views
         }
 
         private static readonly DependencyPropertyKey ProgressPropertyKey =
-            DependencyProperty.RegisterReadOnly(nameof(Progress), typeof(int), typeof(ThreeImageLoader), new PropertyMetadata(0));
+            DependencyProperty.RegisterReadOnly(nameof(Progress), typeof(int), typeof(MultiImageLoader), new PropertyMetadata(0));
 
         public static readonly DependencyProperty ProgressProperty = ProgressPropertyKey.DependencyProperty;
 
@@ -54,9 +53,27 @@ namespace MacroscopImageDownloader.Views
         }
 
         private static readonly DependencyPropertyKey ImageLoadersPropertyKey =
-            DependencyProperty.RegisterReadOnly(nameof(ImageLoaders), typeof(IEnumerable<ImageDownloader>), typeof(ThreeImageLoader), new PropertyMetadata());
+            DependencyProperty.RegisterReadOnly(nameof(ImageLoaders), typeof(IEnumerable<ImageDownloader>), typeof(MultiImageLoader), new PropertyMetadata());
 
         public static readonly DependencyProperty ImageLoadersProperty = ImageLoadersPropertyKey.DependencyProperty;
+
+        public int Rows
+        {
+            get { return (int)GetValue(RowsProperty); }
+            set { SetValue(RowsProperty, value); }
+        }
+
+        public static readonly DependencyProperty RowsProperty =
+            DependencyProperty.Register(nameof(Rows), typeof(int), typeof(MultiImageLoader), new PropertyMetadata(1));
+
+        public int Columns
+        {
+            get { return (int)GetValue(ColumnsProperty); }
+            set { SetValue(ColumnsProperty, value); }
+        }
+
+        public static readonly DependencyProperty ColumnsProperty =
+            DependencyProperty.Register(nameof(Columns), typeof(int), typeof(MultiImageLoader), new PropertyMetadata(3));
 
         public int Progress
         {
@@ -86,16 +103,37 @@ namespace MacroscopImageDownloader.Views
 
         private bool DownloadAllCanExecute(object? arg)
         {
-            return ImageLoaders.Any(loader => loader.StartDownloadCommand.CanExecute(arg));
+            return ImageLoaders?.Any(loader => loader.StartDownloadCommand.CanExecute(arg)) ?? false;
         }
 
-        private void FillAllClick(object sender, RoutedEventArgs e)
+#if TEST
+
+        private RelayCommand _FillAllCommand;
+
+        public ICommand FillAllCommand
+        {
+            get
+            {
+                if (_FillAllCommand == null)
+                    _FillAllCommand = new RelayCommand(FillAll);
+                return _FillAllCommand;
+            }
+        }
+
+        private void FillAll(object? arg)
         {
             // only for test purposes
             foreach (var loader in ImageLoaders)
             {
                 loader.Url = FillAllTextBox.Text;
             }
+        }
+
+#endif
+
+        private void MultiImageLoader_Loaded(object sender, RoutedEventArgs e)
+        {
+            InitializeChildrenWatching(Rows * Columns);
         }
     }
 }

@@ -11,6 +11,6 @@
         <ResourceDictionary Source="/Generic.xaml"/>
     </Window.Resources>
     <Grid>
-        <views:ThreeImageLoader/>
+        <views:MultiImageLoader Rows="1" Columns="3"/>
     </Grid>
 </Window>
