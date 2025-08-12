@@ -110,12 +110,24 @@ namespace MacroscopImageDownloader.ViewModels
             return _cancellationTokenSource.Token;
         }
 
+        private static IDownload CreateDownload(string url)
+        {
+            ArgumentNullException.ThrowIfNull(url, nameof(url));
+            if (url.EndsWith(".heic"))
+                return new NotDefaultDownload(ImageMagick.MagickFormat.Heic);
+            if (url.EndsWith(".heif"))
+                return new NotDefaultDownload(ImageMagick.MagickFormat.Heif);
+            if (url.EndsWith(".tif"))
+                return new NotDefaultDownload(ImageMagick.MagickFormat.Tif);
+            return new BitmapDownload();
+        }
+
         private void StartDownload(object? obj)
         {
             if (Url.IsImageUrl())
             {
                 DisposeDownload();
-                Download = new BitmapDownload();
+                Download = CreateDownload(Url);
                 Download.Start(new Uri(Url), new Progress<ProgressInfo>(info =>
                 {
                     Progress.Percent = info.ProgressPercent;

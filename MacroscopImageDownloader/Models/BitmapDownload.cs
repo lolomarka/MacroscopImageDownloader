@@ -53,10 +53,22 @@ namespace MacroscopImageDownloader.Models
                     int bufferLength = (int)Math.Min((long)MaxBufferSize, contentLength / 100);
                     await InBuffer(async buffer => await CopyStream(buffer, bufferLength, await response.Content.ReadAsStreamAsync(), resultStream, contentLength, token, progress), bufferLength);
                 }
+                else
+                {
+                    await CopyStreamByBytes(await response.Content.ReadAsStreamAsync(), resultStream, token, progress);
+                }
             }
 
             resultStream.Seek(0, SeekOrigin.Begin);
             return resultStream;
+        }
+
+        private async Task CopyStreamByBytes(Stream inputStream, Stream resultStream, CancellationToken token, IProgress<ProgressInfo>? progress)
+        {
+            token.ThrowIfCancellationRequested();
+            progress?.Report(new ProgressInfo(50, DownloadStatus.Active));
+            await inputStream.CopyToAsync(resultStream);
+            progress?.Report(new ProgressInfo(90, DownloadStatus.Active));
         }
 
         private async Task CopyStream(byte[] bufferArray,
